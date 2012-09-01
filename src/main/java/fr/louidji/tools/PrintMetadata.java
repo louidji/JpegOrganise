@@ -5,11 +5,9 @@ import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
-import com.drew.metadata.exif.ExifSubIFDDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,7 +19,7 @@ import java.util.Date;
 public class PrintMetadata {
 
     public static void main(String[] args) {
-        if(args.length > 0) {
+        if (args.length > 0) {
             File file = new File(args[0]);
             try {
                 printMetadata(file);
@@ -33,13 +31,12 @@ public class PrintMetadata {
         }
 
 
-
     }
 
     public static void printMetadata(File file) throws ImageProcessingException, IOException {
         Metadata metadata = ImageMetadataReader.readMetadata(file);
         if (null != metadata) {
-            for(Directory directory : metadata.getDirectories()) {
+            for (Directory directory : metadata.getDirectories()) {
                 for (Tag tag : directory.getTags()) {
                     System.out.println(tag);
                     System.out.println(tag.getTagName() + " > " + tag.getDescription() + ", type : " + tag.getTagTypeHex());
