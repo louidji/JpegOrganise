@@ -51,7 +51,9 @@ public class OrganisePhotoTest {
     @After
     public void tearDown() throws Exception {
         delete(tempFile);
-        delete(dest + tempFile);
+        delete(dest + "2012" + File.separator + "2012_01_08" + File.separator + tempFile);
+        delete(dest + "2012" + File.separator + "2012_01_08");
+        delete(dest + "2012");
         delete(dest);
     }
 
@@ -65,12 +67,13 @@ public class OrganisePhotoTest {
     @org.junit.Test
     public void testOrganize() throws Exception {
         String oriMd5 = md5(tempFile);
-
+        long start = System.currentTimeMillis();
         File destBaseDir = new File(dest);
         File photo = new File(tempFile);
         assertTrue(OrganisePhoto.organize(photo, destBaseDir));
-
-        String destMd5 = md5(destBaseDir + File.separator + tempFile);
+        long end = System.currentTimeMillis();
+        System.out.println("Temps execution " + (end - start) + " ms");
+        String destMd5 = md5(dest + "2012" + File.separator + "2012_01_08" + File.separator + tempFile);
 
         assertEquals(oriMd5, destMd5);
 
