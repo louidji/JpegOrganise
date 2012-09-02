@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,7 +20,14 @@ import java.util.Date;
  * To change this template use File | Settings | File Templates.
  */
 public class OrganizePhoto {
+    private static final Logger logger = Logger.getLogger(OrganizePhoto.class.getName());
 
+    /**
+     * Deplace la photo en fonction de sa date de prise de vue.
+     * @param photo Image source.
+     * @param destBaseDir Répertoire de destination.
+     * @return vrais si la photo est déplacés
+     */
     public static boolean organize(File photo, File destBaseDir) {
         boolean done = false;
         try {
@@ -43,17 +52,17 @@ public class OrganizePhoto {
 
                 final String destFile = destDir.concat(File.separator).concat(photo.getName());
 
-                done = photo.renameTo(new File(destFile));
+                done = FileHelper.moveFile(photo, new File(destFile), false);
                 if (done) {
-                    System.out.println(photo.getAbsolutePath() + " => " + destFile);
+                    logger.info(photo.getAbsolutePath() + " => " + destFile);
                 }
 
 
             }
         } catch (ImageProcessingException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.log(Level.WARNING, e.getLocalizedMessage(), e);
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            logger.log(Level.WARNING, e.getLocalizedMessage(), e);
         }
 
 
