@@ -16,7 +16,7 @@ import java.io.IOException;
  * Time: 15:58
  * To change this template use File | Settings | File Templates.
  */
-public class PrintMetadata {
+public class FileHelper {
 
     public static void main(String[] args) {
         if (args.length > 0) {

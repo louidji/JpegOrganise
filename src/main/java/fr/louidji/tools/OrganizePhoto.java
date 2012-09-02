@@ -17,7 +17,7 @@ import java.util.Date;
  * Time: 17:30
  * To change this template use File | Settings | File Templates.
  */
-public class OrganisePhoto {
+public class OrganizePhoto {
 
     public static boolean organize(File photo, File destBaseDir) {
         boolean done = false;
