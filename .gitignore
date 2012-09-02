@@ -1,4 +1,7 @@
-JpegOrganise.iml
 .idea/*
+
 ./target/*
+
 ./dest/*
+
+JpegOrganise.iml
