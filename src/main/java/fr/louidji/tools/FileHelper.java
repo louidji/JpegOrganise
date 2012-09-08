@@ -188,7 +188,6 @@ public final class FileHelper {
             }
         } else {
             // identique ???
-            // TODO test md5 sur les fichiers
             try {
                 if (compareMd5File(sourceFile.getAbsolutePath(), destFile.getAbsolutePath())) {
                     // Rien à faire
