@@ -4,4 +4,4 @@ target/*
 
 dest/*
 
-JpegOrganise.iml
+*.iml
