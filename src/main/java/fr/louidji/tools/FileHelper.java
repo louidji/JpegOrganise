@@ -14,9 +14,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.logging.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,27 +25,10 @@ import java.util.logging.Logger;
  * Date: 01/09/12
  * Time: 15:58
  */
-public class FileHelper {
+public final class FileHelper {
     private static final Pattern countPattern = Pattern.compile("_[0-9]{3}$");
     private static final Logger logger = Logger.getLogger(FileHelper.class.getName());
 
-    /**
-     * @param args
-     */
-    public static void main(final String[] args) {
-        if (args.length > 0) {
-            File file = new File(args[0]);
-            try {
-                printMetadata(file);
-            } catch (ImageProcessingException e) {
-                logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
-            }
-        }
-
-
-    }
 
     /**
      * Ecrit sur le stdout les metadata de l'image.
@@ -82,7 +65,7 @@ public class FileHelper {
             formatter.format("%02x", b);
         }
         String md5 = formatter.toString();
-        if(logger.isLoggable(Level.FINE)) {
+        if (logger.isLoggable(Level.FINE)) {
             logger.fine(md5 + " " + file);
         }
         return md5;
@@ -104,7 +87,7 @@ public class FileHelper {
         try {
             is = new FileInputStream(filePath);
             dis = new DigestInputStream(is, md);
-            // lecture
+            // lecture => on parcours le digest..
             while (dis.read() != -1) ;
         } finally {
             if (null != is) {
@@ -192,44 +175,71 @@ public class FileHelper {
                 // dans le cas de different file system sur Linux (windows?) le rename ne marche pas => copy puis suppression
                 try {
                     move = copyFile(sourceFile, destFile);
+                    if (move) {
+                        // suppression OK => delete.
+                        if (!sourceFile.delete()) {
+                            logger.info("Impossible de supprimer le fichier " + sourceFile.getAbsolutePath());
+                        }
+                    }
+
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
                 }
             }
         } else {
-            if(logger.isLoggable(Level.FINEST)) {
-                logger.log(Level.FINEST, "Le fichier de destination existe (" + destFile +  "), on essaye d'en trouver un autre : ");
-            }
-            final String fileName = destFile.getName();
-            final int indexExtension = fileName.lastIndexOf(".");
-            final String extension = indexExtension > 0 ? fileName.substring(indexExtension) : "";
-            final String shortFileName = indexExtension > 0 ? fileName.substring(0, indexExtension) : fileName;
-            String destName = destFile.getParentFile().getAbsolutePath().concat(File.separator);
-            // pattern _001 ... "_[0-9]{3}$"
-            Matcher matcher = countPattern.matcher(shortFileName);
-            String count = null;
-            if (matcher.find()) {
-                final int indexShort = matcher.start();
-                final int nextVal = Integer.valueOf(matcher.group().substring(1)) + 1;
-                if (nextVal < 1000) {
-                    count = String.valueOf(nextVal);
-                    while (count.length() < 3) {
-                        count = "0".concat(count);
+            // identique ???
+            // TODO test md5 sur les fichiers
+            try {
+                if (compareMd5File(sourceFile.getAbsolutePath(), destFile.getAbsolutePath())) {
+                    // Rien à faire
+                    if (logger.isLoggable(Level.FINEST)) {
+                        logger.log(Level.FINEST, "Le fichier de destination (" + destFile.getAbsolutePath() + ") est identique à la source (" + sourceFile.getAbsolutePath() + "), on supprime juste la source");
                     }
-                    count = "_".concat(count);
-                    destName = destName.concat(shortFileName.substring(0, indexShort));
-                }  else {
-                    logger.log(Level.WARNING, "Compteur saturé pour le fichier " + sourceFile.getAbsolutePath() + " , impossible de le déplacer");
-                }
-            } else {
-                destName = destName.concat(shortFileName);
-                count = "_001";
-            }
-            if (count != null) {
-                destName = destName.concat(count).concat(extension);
-                logger.info("Fichier destination déjà existant, nouveau chemin de destination potentiel : " + destName);
+                    if (!sourceFile.delete()) {
+                        logger.info("Impossible de supprimer le fichier " + sourceFile.getAbsolutePath());
+                    }
+                } else {
+                    if (logger.isLoggable(Level.FINEST)) {
+                        logger.log(Level.FINEST, "Le fichier de destination existe (" + destFile + "), on essaye d'en trouver un autre : ");
+                    }
+                    final String fileName = destFile.getName();
+                    final int indexExtension = fileName.lastIndexOf(".");
+                    final String extension = indexExtension > 0 ? fileName.substring(indexExtension) : "";
+                    final String shortFileName = indexExtension > 0 ? fileName.substring(0, indexExtension) : fileName;
+                    String destName = destFile.getParentFile().getAbsolutePath().concat(File.separator);
+                    // pattern _001 ... "_[0-9]{3}$"
+                    Matcher matcher = countPattern.matcher(shortFileName);
+                    String count = null;
+                    if (matcher.find()) {
+                        final int indexShort = matcher.start();
+                        final int nextVal = Integer.valueOf(matcher.group().substring(1)) + 1;
+                        if (nextVal < 1000) {
+                            count = String.valueOf(nextVal);
+                            while (count.length() < 3) {
+                                count = "0".concat(count);
+                            }
+                            count = "_".concat(count);
+                            destName = destName.concat(shortFileName.substring(0, indexShort));
+                        } else {
+                            logger.log(Level.WARNING, "Compteur saturé pour le fichier " + sourceFile.getAbsolutePath() + " , impossible de le déplacer");
+                        }
+                    } else {
+                        destName = destName.concat(shortFileName);
+                        count = "_001";
+                    }
+                    if (count != null) {
+                        destName = destName.concat(count).concat(extension);
+                        logger.info("Fichier destination déjà existant, nouveau chemin de destination potentiel : " + destName);
 
-                move = moveFile(sourceFile, new File(destName), override);
+                        move = moveFile(sourceFile, new File(destName), override);
+                    }
+                }
+
+
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+            } catch (NoSuchAlgorithmException e) {
+                logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
             }
 
 
