@@ -183,7 +183,11 @@ public final class FileHelper {
      */
     public static boolean moveFile(final File sourceFile, final File destFile, boolean override) {
         boolean move = false;
-        if (!destFile.exists() || override) {
+        if (sourceFile.equals(destFile)) {
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("On ne déplace pas le fichier " + sourceFile.getAbsolutePath() + " sur lui même");
+            }
+        } else if (!destFile.exists() || override) {
             move = sourceFile.renameTo(destFile);
             if (!move) {
                 // dans le cas de different file system sur Linux (windows?) le rename ne marche pas => copy puis suppression
@@ -205,9 +209,7 @@ public final class FileHelper {
             try {
                 if (compareMd5File(sourceFile.getAbsolutePath(), destFile.getAbsolutePath())) {
                     // Rien à faire
-                    if (logger.isLoggable(Level.FINEST)) {
-                        logger.log(Level.FINEST, "Le fichier de destination (" + destFile.getAbsolutePath() + ") est identique à la source (" + sourceFile.getAbsolutePath() + "), on supprime juste la source");
-                    }
+                    logger.info("Le fichier de destination (" + destFile.getAbsolutePath() + ") est identique à la source (" + sourceFile.getAbsolutePath() + "), on supprime juste la source");
                     move = sourceFile.delete();
                     if (!move) {
                         logger.info("Impossible de supprimer le fichier " + sourceFile.getAbsolutePath());
