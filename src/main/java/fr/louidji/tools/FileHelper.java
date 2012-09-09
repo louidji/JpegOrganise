@@ -37,6 +37,7 @@ public final class FileHelper {
      * @throws ImageProcessingException
      * @throws IOException
      */
+    @SuppressWarnings("UnusedDeclaration")
     public static void printMetadata(final File filePath) throws ImageProcessingException, IOException {
         Metadata metadata = ImageMetadataReader.readMetadata(filePath);
         if (null != metadata) {
@@ -88,6 +89,7 @@ public final class FileHelper {
             is = new FileInputStream(filePath);
             dis = new DigestInputStream(is, md);
             // lecture => on parcours le digest..
+            //noinspection StatementWithEmptyBody
             while (dis.read() != -1) ;
         } finally {
             if (null != is) {
@@ -126,7 +128,9 @@ public final class FileHelper {
     public static boolean copyFile(final File sourceFile, final File destFile) throws IOException {
         boolean transfer = false;
         if (!destFile.exists()) {
-            destFile.createNewFile();
+            if (!destFile.createNewFile()) {
+                logger.warning("Probleme de création du fichier " + destFile.getAbsolutePath());
+            }
         }
 
         FileChannel source = null;
@@ -155,6 +159,7 @@ public final class FileHelper {
      * @return vrais si le transfert est complet.
      * @throws IOException
      */
+    @SuppressWarnings("UnusedDeclaration")
     public static boolean copyFile(final String sourceFilePath, final String destFilePath) throws IOException {
         return copyFile(new File(sourceFilePath), new File(destFilePath));
     }
@@ -194,7 +199,8 @@ public final class FileHelper {
                     if (logger.isLoggable(Level.FINEST)) {
                         logger.log(Level.FINEST, "Le fichier de destination (" + destFile.getAbsolutePath() + ") est identique à la source (" + sourceFile.getAbsolutePath() + "), on supprime juste la source");
                     }
-                    if (!sourceFile.delete()) {
+                    move = sourceFile.delete();
+                    if (!move) {
                         logger.info("Impossible de supprimer le fichier " + sourceFile.getAbsolutePath());
                     }
                 } else {

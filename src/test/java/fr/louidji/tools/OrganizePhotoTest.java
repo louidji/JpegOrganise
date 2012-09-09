@@ -3,7 +3,10 @@ package fr.louidji.tools;
 import org.junit.After;
 import org.junit.Before;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -13,7 +16,6 @@ import static org.junit.Assert.assertTrue;
  * User: louis
  * Date: 01/09/12
  * Time: 18:05
- * To change this template use File | Settings | File Templates.
  */
 public class OrganizePhotoTest {
     private static final String tempFile = "temp2012-01-08 16.34.06.jpg";
@@ -56,6 +58,7 @@ public class OrganizePhotoTest {
     private void delete(String file) {
         File fileToDelete = new File(file);
         if (fileToDelete.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             fileToDelete.delete();
         }
     }
@@ -70,8 +73,11 @@ public class OrganizePhotoTest {
         long end = System.currentTimeMillis();
         System.out.println("Temps execution " + (end - start) + " ms");
         String destMd5 = FileHelper.md5(dest + "2012" + File.separator + "2012_01_08" + File.separator + tempFile);
+        assertEquals(destMd5, "6deb5bec09d0a2e82a71a71f574d893a");
 
+        System.out.println(destMd5);
         assertEquals(oriMd5, destMd5);
+
 
     }
 
