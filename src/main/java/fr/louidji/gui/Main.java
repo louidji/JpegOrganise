@@ -105,16 +105,33 @@ public class Main extends JDialog {
             ok = false;
         }
         if (ok) {
-            final File sourceDir = new File(textFieldSrc.getText());
-            final File destDir = new File(textFieldDst.getText());
+            buttonOK.setEnabled(false);
             textArea.append("=============================\n");
-            final long start = System.currentTimeMillis();
-            Result result = OrganizePhoto.organizeAll(sourceDir, destDir);
-            final long end = System.currentTimeMillis();
-            textArea.append("=============================\n");
-            textArea.append("    Resultat du traitement : " + result.getNbImagesProcessed() + "∕" + result.getNbImagesToProcess() + " (" + (end - start) + " ms)");
-            textArea.append("\n=============================\n");
+            Thread worker = new Thread(new Runnable() {
+                public void run() {
+                    final File sourceDir = new File(textFieldSrc.getText());
+                    final File destDir = new File(textFieldDst.getText());
 
+                    final long start = System.currentTimeMillis();
+                    final Result result = OrganizePhoto.organizeAll(sourceDir, destDir);
+                    final long end = System.currentTimeMillis();
+
+                    SwingUtilities.invokeLater(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            textArea.append("=============================\n");
+                            textArea.append("    Resultat du traitement : " + result.getNbImagesProcessed() + "∕" + result.getNbImagesToProcess() + " (" + (end - start) + " ms)");
+                            textArea.append("\n=============================\n");
+                            buttonOK.setEnabled(true);
+                        }
+                    });
+
+
+                }
+            }
+            );
+            worker.start();
         }
     }
 

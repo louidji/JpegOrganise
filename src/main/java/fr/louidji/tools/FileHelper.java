@@ -245,7 +245,8 @@ public final class FileHelper {
                     }
                     if (count != null) {
                         destName = destName.concat(count).concat(extension);
-                        logger.info("Fichier destination déjà existant, nouveau chemin de destination potentiel : " + destName);
+                        logger.info("Fichier source " + sourceFile.getAbsolutePath() + " vers destination déjà existant, nouveau chemin de destination potentiel : " + destName);
+
 
                         move = moveFile(sourceFile, new File(destName), override);
                     }

@@ -86,7 +86,7 @@ public class OrganizePhoto {
                     final String year = df.format(date);
                     df.applyPattern("MM");
                     final String month = df.format(date);
-                    df.applyPattern("DD");
+                    df.applyPattern("dd");
                     final String day = df.format(date);
 
                     final String destDir = destBaseDir.getPath().concat(File.separator).concat(year).concat(File.separator)
