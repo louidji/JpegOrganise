@@ -72,29 +72,33 @@ public class OrganizePhoto {
             final Metadata metadata = ImageMetadataReader.readMetadata(photo);
             if (null != metadata) {
                 final ExifSubIFDDirectory directory = metadata.getDirectory(ExifSubIFDDirectory.class);
-                final Date date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL);
-                final SimpleDateFormat df = new SimpleDateFormat("yyyy");
-                final String year = df.format(date);
-                df.applyPattern("MM");
-                final String month = df.format(date);
-                df.applyPattern("DD");
-                final String day = df.format(date);
+                final Date date;
+                if (null != directory && (date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)) != null) {
+                    final SimpleDateFormat df = new SimpleDateFormat("yyyy");
+                    final String year = df.format(date);
+                    df.applyPattern("MM");
+                    final String month = df.format(date);
+                    df.applyPattern("DD");
+                    final String day = df.format(date);
 
-                final String destDir = destBaseDir.getPath().concat(File.separator).concat(year).concat(File.separator)
-                        .concat(year).concat("_").concat(month).concat("_").concat(day);
+                    final String destDir = destBaseDir.getPath().concat(File.separator).concat(year).concat(File.separator)
+                            .concat(year).concat("_").concat(month).concat("_").concat(day);
 
-                final File dir = new File(destDir);
-                if (!dir.exists() || !dir.isDirectory()) {
-                    if (!dir.mkdirs()) {
-                        logger.warning("Problème lors de la création de l'arborescence " + dir.getAbsolutePath());
+                    final File dir = new File(destDir);
+                    if (!dir.exists() || !dir.isDirectory()) {
+                        if (!dir.mkdirs()) {
+                            logger.warning("Problème lors de la création de l'arborescence " + dir.getAbsolutePath());
+                        }
                     }
-                }
 
-                final String destFile = destDir.concat(File.separator).concat(photo.getName());
+                    final String destFile = destDir.concat(File.separator).concat(photo.getName());
 
-                done = FileHelper.moveFile(photo, new File(destFile), false);
-                if (done) {
-                    logger.info(photo.getAbsolutePath() + " => " + destFile);
+                    done = FileHelper.moveFile(photo, new File(destFile), false);
+                    if (done) {
+                        logger.info(photo.getAbsolutePath() + " => " + destFile);
+                    }
+                } else {
+                    logger.info(photo.getAbsolutePath() + " n'a pas de metadata.");
                 }
 
 
