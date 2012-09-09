@@ -10,6 +10,7 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,6 +23,14 @@ import java.util.logging.Logger;
  */
 public class OrganizePhoto {
     private static final Logger logger = Logger.getLogger(OrganizePhoto.class.getName());
+
+    public static void addHandler(Handler handler) throws SecurityException {
+        logger.addHandler(handler);
+    }
+
+    public static void removeHandler(Handler handler) throws SecurityException {
+        logger.removeHandler(handler);
+    }
     // Scan
     /**
      * File Filter pour filtre => accepte JPG & Dir.
@@ -54,7 +63,6 @@ public class OrganizePhoto {
                 result.add(1, done ? 1 : 0);
             }
         }
-
 
         return result;
     }
@@ -95,10 +103,10 @@ public class OrganizePhoto {
 
                     done = FileHelper.moveFile(photo, new File(destFile), false);
                     if (done) {
-                        logger.info(photo.getAbsolutePath() + " => " + destFile);
+                        logger.fine(photo.getAbsolutePath() + " => " + destFile);
                     }
                 } else {
-                    logger.info(photo.getAbsolutePath() + " n'a pas de metadata.");
+                    logger.info(photo.getAbsolutePath() + " n'a pas de metadata, image non copiée.");
                 }
 
 

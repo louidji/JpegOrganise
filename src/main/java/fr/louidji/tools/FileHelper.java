@@ -13,6 +13,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Formatter;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -28,6 +29,14 @@ import java.util.regex.Pattern;
 public final class FileHelper {
     private static final Pattern countPattern = Pattern.compile("_[0-9]{3}$");
     private static final Logger logger = Logger.getLogger(FileHelper.class.getName());
+
+    public static void addHandler(Handler handler) throws SecurityException {
+        logger.addHandler(handler);
+    }
+
+    public static void removeHandler(Handler handler) throws SecurityException {
+        logger.removeHandler(handler);
+    }
 
 
     /**
