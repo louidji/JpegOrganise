@@ -6,11 +6,18 @@ import fr.louidji.tools.Result;
 
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.File;
+import java.io.*;
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Properties;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 public class Main extends JDialog {
+    private static final String CONF_DIR = System.getProperty("user.home").concat(File.separator).concat(".organizephoto").concat(File.separator);
+    private static final String CONF_FILE = CONF_DIR.concat("lastvalues.properties");
     private JPanel contentPane;
     private JButton buttonOK;
     private JButton buttonCancel;
@@ -19,7 +26,10 @@ public class Main extends JDialog {
     private JTextField textFieldDst;
     private JButton destinationButton;
     private JTextArea textArea;
+    private JCheckBox renamePhoto;
     private MyHandler logHandler = new MyHandler(textArea);
+
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public Main() {
         setTitle("Application d'organisation des images");
@@ -69,6 +79,28 @@ public class Main extends JDialog {
         OrganizePhoto.addHandler(logHandler);
         FileHelper.addHandler(logHandler);
 
+        // chargement des dernieres valeurs
+        File propertiesFile = new File(CONF_FILE);
+        if (propertiesFile.exists() && propertiesFile.canRead()) {
+            Properties properties = new Properties();
+            try (InputStream fis = new FileInputStream(propertiesFile)) {
+                properties.load(fis);
+
+                final String src = properties.getProperty("src");
+                final File srcDir = new File(src);
+                if (srcDir.exists() && srcDir.isDirectory())
+                    textFieldSrc.setText(src);
+
+                final String dest = properties.getProperty("dest");
+                final File destDir = new File(dest);
+                if (destDir.exists() && destDir.isDirectory())
+                    textFieldDst.setText(dest);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, e.getLocalizedMessage(), e);
+            }
+
+        }
+
 
     }
 
@@ -105,6 +137,20 @@ public class Main extends JDialog {
             ok = false;
         }
         if (ok) {
+            File confDir = new File(CONF_DIR);
+            if (!confDir.exists())
+                confDir.mkdir();
+            Properties properties = new Properties();
+            File propertiesFile = new File(CONF_FILE);
+            try (OutputStream fos = new FileOutputStream(propertiesFile)) {
+                properties.setProperty("src", textFieldSrc.getText());
+                properties.setProperty("dest", textFieldDst.getText());
+
+                properties.store(fos, DateFormat.getDateInstance().format(new Date()));
+            } catch (IOException e) {
+                logger.log(Level.WARNING, e.getLocalizedMessage(), e);
+            }
+
             buttonOK.setEnabled(false);
             textArea.append("=============================\n");
             Thread worker = new Thread(new Runnable() {
@@ -113,7 +159,7 @@ public class Main extends JDialog {
                     final File destDir = new File(textFieldDst.getText());
 
                     final long start = System.currentTimeMillis();
-                    final Result result = OrganizePhoto.organizeAll(sourceDir, destDir);
+                    final Result result = OrganizePhoto.organizeAll(sourceDir, destDir, OrganizePhoto.BASE_DIR_PATTERN_FORMAT, renamePhoto.isSelected() ? OrganizePhoto.PHOTO_NAME_LONG_FORMAT : null);
                     final long end = System.currentTimeMillis();
 
                     SwingUtilities.invokeLater(new Runnable() {

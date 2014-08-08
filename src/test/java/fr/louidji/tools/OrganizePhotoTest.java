@@ -17,8 +17,10 @@ import static org.junit.Assert.assertTrue;
  * Time: 18:05
  */
 public class OrganizePhotoTest {
-    private static final String TEMP_FILE = "2012-01-08 16.34.06.jpg";
-    private static final String TMP_PATH_FILE = "./tmp/" + TEMP_FILE;
+    private static final String TEMP_FILE1 = "2012-01-08 16.34.06.jpg";
+    private static final String TEMP_FILE2 = "2012-01-08 16.34.05.jpg";
+    private static final String TMP_PATH_FILE1 = "./tmp/" + TEMP_FILE1;
+    private static final String TMP_PATH_FILE2 = "./tmp/" + TEMP_FILE2;
     private static final String DEST = "./dest/";
     public static final FileFilter FILTER = new FileFilter() {
         @Override
@@ -76,14 +78,19 @@ public class OrganizePhotoTest {
 
     @org.junit.Test
     public void testOrganize() throws Exception {
-        String oriMd5 = FileHelper.md5(TMP_PATH_FILE);
+        String oriMd5 = FileHelper.md5(TMP_PATH_FILE1);
         long start = System.currentTimeMillis();
         File destBaseDir = new File(DEST);
-        File photo = new File(TMP_PATH_FILE);
-        assertTrue(OrganizePhoto.organize(photo, destBaseDir));
+
+        assertTrue(OrganizePhoto.organize(new File(TMP_PATH_FILE1), destBaseDir, OrganizePhoto.BASE_DIR_PATTERN_FORMAT, null));
+        assertTrue(OrganizePhoto.organize(new File(TMP_PATH_FILE2), destBaseDir, OrganizePhoto.BASE_DIR_PATTERN_FORMAT, OrganizePhoto.PHOTO_NAME_LONG_FORMAT));
+
         long end = System.currentTimeMillis();
         System.out.println("Temps execution " + (end - start) + " ms");
-        String destMd5 = FileHelper.md5(DEST + "2012" + File.separator + "2012_01_08" + File.separator + TEMP_FILE);
+        String destMd5 = FileHelper.md5(DEST + "2012" + File.separator + "2012_01_08" + File.separator + TEMP_FILE1);
+
+        assertEquals(destMd5, "6deb5bec09d0a2e82a71a71f574d893a");
+        destMd5 = FileHelper.md5(DEST + "2012" + File.separator + "2012_01_08" + File.separator + "2012_01_08-16_34_05.jpg");
         assertEquals(destMd5, "6deb5bec09d0a2e82a71a71f574d893a");
 
         System.out.println(destMd5);
@@ -95,7 +102,7 @@ public class OrganizePhotoTest {
         Result result = OrganizePhoto.organizeAll(new File("./tmp"), new File(DEST));
         System.out.println(result.getNbImagesProcessed() + "/" + result.getNbImagesToProcess());
 
-        assertEquals(2, result.getNbImagesProcessed());
-        assertEquals(4, result.getNbImagesToProcess());
+        assertEquals(3, result.getNbImagesProcessed());
+        assertEquals(5, result.getNbImagesToProcess());
     }
 }

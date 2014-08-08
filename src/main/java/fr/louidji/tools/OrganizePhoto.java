@@ -23,6 +23,14 @@ import java.util.logging.Logger;
  */
 public class OrganizePhoto {
     private static final Logger logger = Logger.getLogger(OrganizePhoto.class.getName());
+    /**
+     * Format standard pour les repertoires
+     */
+    public static final String BASE_DIR_PATTERN_FORMAT = "yyyy" + File.separator + "yyyy_MM_dd";
+    /**
+     * Exemple de format horodate pour le nom des images (le temps au format Exif n'a pas les millisecondes) sans l'extension
+     */
+    public static final String PHOTO_NAME_LONG_FORMAT = "yyyy_MM_dd-HH_mm_ss";
 
     public static void addHandler(Handler handler) throws SecurityException {
         logger.addHandler(handler);
@@ -51,15 +59,27 @@ public class OrganizePhoto {
      * @param destDir   répertoire dans lequels les images seront déplacés.
      * @return resultat du traitement.
      */
-    @SuppressWarnings("UnusedDeclaration")
     public static Result organizeAll(File sourceDir, File destDir) {
+        return organizeAll(sourceDir, destDir, BASE_DIR_PATTERN_FORMAT, null);
+    }
+
+    /**
+     * Organise en masse
+     *
+     * @param sourceDir            répertoire contenant les images a déplacer.
+     * @param destDir              répertoire dans lequels les images seront déplacés.
+     * @param destDirPatternFormat pattern du sous repertoire
+     * @param photoNamePattern     pattern temporelle du nom de des images sans l'extension (si null on prend le nom par defaut)
+     * @return resultat du traitement.
+     */
+    public static Result organizeAll(File sourceDir, File destDir, String destDirPatternFormat, String photoNamePattern) {
         final Result result = new Result(0, 0);
         File files[] = sourceDir.listFiles(imageOrDirFileFilter);
         for (File file : files) {
             if (file.isDirectory()) {
-                result.add(organizeAll(file, destDir));
+                result.add(organizeAll(file, destDir, destDirPatternFormat, photoNamePattern));
             } else {
-                boolean done = organize(file, destDir);
+                boolean done = organize(file, destDir, destDirPatternFormat, photoNamePattern);
                 result.add(1, done ? 1 : 0);
             }
         }
@@ -70,11 +90,13 @@ public class OrganizePhoto {
     /**
      * Deplace la photo en fonction de sa date de prise de vue.
      *
-     * @param photo       Image source.
-     * @param destBaseDir Répertoire de destination.
+     * @param photo                Image source.
+     * @param destBaseDir          Répertoire de destination.
+     * @param destDirPatternFormat pattern du sous repertoire
+     * @param photoNamePattern     pattern temporelle du nom de des images sans l'extension (si null on prend le nom par defaut)
      * @return vrais si la photo est déplacés
      */
-    public static boolean organize(File photo, File destBaseDir) {
+    public static boolean organize(File photo, File destBaseDir, String destDirPatternFormat, String photoNamePattern) {
         boolean done = false;
         try {
             final Metadata metadata = ImageMetadataReader.readMetadata(photo);
@@ -82,15 +104,10 @@ public class OrganizePhoto {
                 final ExifSubIFDDirectory directory = metadata.getDirectory(ExifSubIFDDirectory.class);
                 final Date date;
                 if (null != directory && (date = directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL)) != null) {
-                    final SimpleDateFormat df = new SimpleDateFormat("yyyy");
-                    final String year = df.format(date);
-                    df.applyPattern("MM");
-                    final String month = df.format(date);
-                    df.applyPattern("dd");
-                    final String day = df.format(date);
+                    final SimpleDateFormat df = new SimpleDateFormat(destDirPatternFormat);
+                    final String formatted = df.format(date);
 
-                    final String destDir = destBaseDir.getPath().concat(File.separator).concat(year).concat(File.separator)
-                            .concat(year).concat("_").concat(month).concat("_").concat(day);
+                    final String destDir = destBaseDir.getPath().concat(File.separator).concat(formatted);
 
                     final File dir = new File(destDir);
                     if (!dir.exists() || !dir.isDirectory()) {
@@ -98,8 +115,15 @@ public class OrganizePhoto {
                             logger.warning("Problème lors de la création de l'arborescence " + dir.getAbsolutePath());
                         }
                     }
-
-                    final String destFile = destDir.concat(File.separator).concat(photo.getName());
+                    final String name;
+                    final String photoName = photo.getName();
+                    if (null == photoNamePattern || photoNamePattern.isEmpty())
+                        name = photoName;
+                    else {
+                        df.applyPattern(photoNamePattern);
+                        name = df.format(date) + photoName.substring(photoName.lastIndexOf('.'));
+                    }
+                    final String destFile = destDir.concat(File.separator).concat(name);
 
                     done = FileHelper.moveFile(photo, new File(destFile), false);
                     if (done) {
@@ -111,9 +135,7 @@ public class OrganizePhoto {
 
 
             }
-        } catch (ImageProcessingException e) {
-            logger.log(Level.WARNING, e.getLocalizedMessage(), e);
-        } catch (IOException e) {
+        } catch (ImageProcessingException | IOException e) {
             logger.log(Level.WARNING, e.getLocalizedMessage(), e);
         }
 
