@@ -1,18 +1,28 @@
 package fr.louidji.tools;
 
+import com.coremedia.iso.IsoFile;
+import com.coremedia.iso.boxes.MovieBox;
+import com.coremedia.iso.boxes.TrackBox;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
+import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.googlecode.mp4parser.FileDataSourceImpl;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Formatter;
+import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +66,49 @@ public final class FileHelper {
                 }
             }
         }
+    }
+
+    public static Date getMp4CreationTimeFromMetaData(File movie) throws IOException {
+
+        final IsoFile isoFile = new IsoFile(new FileDataSourceImpl(movie));
+        final MovieBox movieBox = isoFile.getMovieBox();
+        if (null != movieBox) {
+            final List<TrackBox> boxes = movieBox.getBoxes(TrackBox.class);
+
+            return boxes.get(0).getMediaBox().getMediaHeaderBox().getCreationTime();
+        } else {
+            logger.warning(movie.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? mp4 ?)");
+            return null;
+        }
+    }
+
+    public static Date getImageCreationTimeFromMetaData(File photo) throws ImageProcessingException, IOException {
+        final Metadata metadata = ImageMetadataReader.readMetadata(photo);
+        if (null != metadata) {
+            final ExifSubIFDDirectory directory = metadata.getDirectory(ExifSubIFDDirectory.class);
+            final Date date;
+            return null != directory ? directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) : null;
+        } else {
+            logger.warning(photo.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? image ?)");
+            return null;
+        }
+    }
+
+    public static Date getCreationDateFromMetaData(File file) throws ImageProcessingException, IOException {
+        final String fileName = file.getName();
+        final String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
+        switch (extension) {
+            case "jpg":
+            case "jpeg":
+                return getImageCreationTimeFromMetaData(file);
+            case "mov":
+            case "mp4":
+            case "mp2":
+                return getMp4CreationTimeFromMetaData(file);
+            default:
+                return null;
+        }
+
     }
 
     /**
@@ -127,14 +180,14 @@ public final class FileHelper {
     }
 
     /**
-     * Copie (ecrase sir existan) un fichier.
+     * Copie (ecrase si existan) un fichier.
      *
      * @param sourceFile fichier source.
      * @param destFile   fichier destination.
      * @return vrais si le transfert est complet.
      * @throws IOException
      */
-    public static boolean copyFile(final File sourceFile, final File destFile) throws IOException {
+    public static boolean oldJdkCopyFile(final File sourceFile, final File destFile) throws IOException {
         boolean transfer = false;
         if (!destFile.exists()) {
             if (!destFile.createNewFile()) {
@@ -160,8 +213,26 @@ public final class FileHelper {
         return transfer;
     }
 
+
     /**
-     * Copie (ecrase sir existan) un fichier.
+     * Copie (ecrase si existan) un fichier.
+     *
+     * @param sourceFilePath fichier source.
+     * @param destFilePath   fichier destination.
+     * @return vrais si le transfert est complet.
+     * @throws IOException
+     */
+    @SuppressWarnings("UnusedDeclaration")
+    public static boolean copyFile(final File sourceFilePath, final File destFilePath) throws IOException {
+        return null != Files.copy(Paths.get(sourceFilePath.toURI()), Paths.get(destFilePath.toURI()),
+                StandardCopyOption.REPLACE_EXISTING,
+                StandardCopyOption.COPY_ATTRIBUTES
+        );
+
+    }
+
+    /**
+     * Copie (ecrase si existan) un fichier.
      *
      * @param sourceFilePath fichier source.
      * @param destFilePath   fichier destination.
@@ -170,7 +241,11 @@ public final class FileHelper {
      */
     @SuppressWarnings("UnusedDeclaration")
     public static boolean copyFile(final String sourceFilePath, final String destFilePath) throws IOException {
-        return copyFile(new File(sourceFilePath), new File(destFilePath));
+        return null != Files.copy(Paths.get(sourceFilePath), Paths.get(destFilePath),
+                StandardCopyOption.REPLACE_EXISTING,
+                StandardCopyOption.COPY_ATTRIBUTES
+        );
+
     }
 
     /**
