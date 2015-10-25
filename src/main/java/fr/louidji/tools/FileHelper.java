@@ -68,19 +68,19 @@ public final class FileHelper {
         }
     }
 
-    private static Date getMp4CreationTimeFromMetaData(File movie) throws IOException {
+    private static Date getFileCreationTimeFromMovieMetaData(File movie) throws IOException, ImageProcessingException {
 
         final IsoFile isoFile = new IsoFile(new FileDataSourceImpl(movie));
         final MovieBox movieBox = isoFile.getMovieBox();
         if (null != movieBox) {
             return movieBox.getMovieHeaderBox().getCreationTime();
         } else {
-            logger.warning(movie.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? mp4 ?)");
-            return null;
+            // last chance via exif
+            return getFileCreationTimeFromExifMetaData(movie);
         }
     }
 
-    private static Date getImageCreationTimeFromMetaData(File photo) throws ImageProcessingException, IOException {
+    private static Date getFileCreationTimeFromExifMetaData(File photo) throws ImageProcessingException, IOException {
         final Metadata metadata = ImageMetadataReader.readMetadata(photo);
         Date value = null;
         if (null != metadata) {
@@ -101,7 +101,7 @@ public final class FileHelper {
 
         }
         if (null == value) {
-            logger.warning(photo.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? image ?)");
+            logger.warning(photo.getAbsolutePath() + " => impossible de récuperer la date de création du fichier");
         }
         return value;
     }
@@ -110,13 +110,15 @@ public final class FileHelper {
         final String fileName = file.getName();
         final String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
         switch (extension) {
+            case "png":
             case "jpg":
             case "jpeg":
-                return getImageCreationTimeFromMetaData(file);
+                return getFileCreationTimeFromExifMetaData(file);
+            case "avi":
             case "mov":
             case "mp4":
             case "mp2":
-                return getMp4CreationTimeFromMetaData(file);
+                return getFileCreationTimeFromMovieMetaData(file);
             default:
                 return null;
         }

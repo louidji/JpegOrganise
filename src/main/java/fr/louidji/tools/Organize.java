@@ -34,7 +34,7 @@ public class Organize {
     private static final FileFilter mediaOrDirFileFilter = file -> {
         assert null != file : "Le fichier ne peut etre null";
         final String name = file.getName().toLowerCase();
-        return file.isDirectory() || (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".mov") || name.endsWith(".mp4") || name.endsWith(".mp2"));
+        return file.isDirectory() || (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".avi") || name.endsWith(".mov") || name.endsWith(".mp4") || name.endsWith(".mp2"));
     };
 
     public static void addHandler(Handler handler) throws SecurityException {
