@@ -160,8 +160,10 @@ class Main extends JDialog {
         }
         if (ok) {
             File confDir = new File(CONF_DIR);
-            if (!confDir.exists())
-                confDir.mkdir();
+            if (!confDir.exists()) {
+                if (!confDir.mkdir())
+                    textArea.append("Impossible de créer le répertoire de configuration ".concat(CONF_DIR).concat("\n"));
+            }
             Properties properties = new Properties();
             File propertiesFile = new File(CONF_FILE);
             try (OutputStream fos = new FileOutputStream(propertiesFile)) {

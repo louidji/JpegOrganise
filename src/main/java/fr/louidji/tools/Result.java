@@ -46,6 +46,7 @@ public class Result {
      * @param nbImagesToProcess Nombre d'images sources à traiter.
      * @param nbImagesProcessed Nombre d'images traité avec succès.
      */
+    @SuppressWarnings("SameParameterValue")
     public void add(int nbImagesToProcess, int nbImagesProcessed) {
         this.nbImagesToProcess += nbImagesToProcess;
         this.nbImagesProcessed += nbImagesProcessed;

@@ -31,7 +31,7 @@ public class Organize {
     /**
      * File Filter pour filtre => accepte JPG & MOV & MP4 & MP2 & Dir.
      */
-    private static FileFilter mediaOrDirFileFilter = new FileFilter() {
+    private static final FileFilter mediaOrDirFileFilter = new FileFilter() {
         @Override
         public boolean accept(File file) {
             assert null != file : "Le fichier ne peut etre null";

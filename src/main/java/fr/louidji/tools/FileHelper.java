@@ -84,7 +84,6 @@ public final class FileHelper {
         final Metadata metadata = ImageMetadataReader.readMetadata(photo);
         if (null != metadata) {
             final ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
-            final Date date;
             return null != directory ? directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) : null;
         } else {
             logger.warning(photo.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? image ?)");
@@ -269,6 +268,7 @@ public final class FileHelper {
                         logger.info("Fichier source " + sourceFile.getAbsolutePath() + " vers destination déjà existant, nouveau chemin de destination potentiel : " + destName);
 
 
+                        //noinspection ConstantConditions
                         move = moveFile(sourceFile, new File(destName), override);
                     }
                 }
