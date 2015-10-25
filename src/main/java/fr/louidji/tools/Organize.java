@@ -46,16 +46,18 @@ public class Organize {
         logger.removeHandler(handler);
     }
 
+
     /**
-     * Organise en masse
+     * Organise en masse (sans forcage)
      *
      * @param sourceDir répertoire contenant les images a déplacer.
      * @param destDir   répertoire dans lequels les images seront déplacés.
      * @return resultat du traitement.
      */
-    public static Result organizeAll(File sourceDir, File destDir) {
-        return organizeAll(sourceDir, destDir, BASE_DIR_PATTERN_FORMAT, null);
+    public static Result organizeAll(final File sourceDir, final File destDir) {
+        return organizeAll(sourceDir, destDir, BASE_DIR_PATTERN_FORMAT, null, false);
     }
+
 
     /**
      * Organise en masse
@@ -64,16 +66,17 @@ public class Organize {
      * @param destDir              répertoire dans lequels les images seront déplacés.
      * @param destDirPatternFormat pattern du sous repertoire
      * @param photoNamePattern     pattern temporelle du nom de des images sans l'extension (si null on prend le nom par defaut)
+     * @param force                force l'opération sur fichier qui n'a pas de metadonnees (se basera sur la date de modification)
      * @return resultat du traitement.
      */
-    public static Result organizeAll(File sourceDir, File destDir, String destDirPatternFormat, String photoNamePattern) {
+    public static Result organizeAll(final File sourceDir, final File destDir, final String destDirPatternFormat, final String photoNamePattern, final boolean force) {
         final Result result = new Result(0, 0);
         final File files[] = sourceDir.listFiles(mediaOrDirFileFilter);
         for (File file : files) {
             if (file.isDirectory()) {
-                result.add(organizeAll(file, destDir, destDirPatternFormat, photoNamePattern));
+                result.add(organizeAll(file, destDir, destDirPatternFormat, photoNamePattern, force));
             } else {
-                boolean done = organize(file, destDir, destDirPatternFormat, photoNamePattern);
+                boolean done = organize(file, destDir, destDirPatternFormat, photoNamePattern, force);
                 result.add(1, done ? 1 : 0);
             }
         }
@@ -82,7 +85,7 @@ public class Organize {
     }
 
     /**
-     * Deplace la photo en fonction de sa date de prise de vue.
+     * Deplace la photo en fonction de sa date de prise de vue (sans forcage).
      *
      * @param file                 Image ou video source.
      * @param destBaseDir          Répertoire de destination.
@@ -90,12 +93,27 @@ public class Organize {
      * @param fileNamePattern      pattern temporelle du nom de des images sans l'extension (si null on prend le nom par defaut)
      * @return vrais si la photo est déplacés
      */
-    public static boolean organize(File file, File destBaseDir, String destDirPatternFormat, String fileNamePattern) {
+    public static boolean organize(final File file, final File destBaseDir, @SuppressWarnings("SameParameterValue") final String destDirPatternFormat, final String fileNamePattern) {
+        return organize(file, destBaseDir, destDirPatternFormat, fileNamePattern, false);
+    }
+
+
+    /**
+     * Deplace la photo en fonction de sa date de prise de vue.
+     *
+     * @param file                 Image ou video source.
+     * @param destBaseDir          Répertoire de destination.
+     * @param destDirPatternFormat pattern du sous repertoire
+     * @param fileNamePattern      pattern temporelle du nom de des images sans l'extension (si null on prend le nom par defaut)
+     * @param force                force l'opération sur fichier qui n'a pas de metadonnees (se basera sur la date de modification)
+     * @return vrais si la photo est déplacés
+     */
+    private static boolean organize(final File file, final File destBaseDir, final String destDirPatternFormat, final String fileNamePattern, final boolean force) {
         boolean done = false;
         try {
 
 
-            final Date date = FileHelper.getCreationDateFromMetaData(file);
+            final Date date = FileHelper.getCreationDateFromMetaData(file, force);
             if (null != date) {
                 final SimpleDateFormat df = new SimpleDateFormat(destDirPatternFormat);
                 final String formatted = df.format(date);

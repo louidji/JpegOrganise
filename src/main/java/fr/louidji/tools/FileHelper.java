@@ -68,20 +68,20 @@ public final class FileHelper {
         }
     }
 
-    private static Date getFileCreationTimeFromMovieMetaData(File movie) throws IOException, ImageProcessingException {
+    private static Date getFileCreationTimeFromMovieMetaData(final File file, final boolean force) throws IOException, ImageProcessingException {
 
-        final IsoFile isoFile = new IsoFile(new FileDataSourceImpl(movie));
+        final IsoFile isoFile = new IsoFile(new FileDataSourceImpl(file));
         final MovieBox movieBox = isoFile.getMovieBox();
         if (null != movieBox) {
             return movieBox.getMovieHeaderBox().getCreationTime();
         } else {
             // last chance via exif
-            return getFileCreationTimeFromExifMetaData(movie);
+            return getFileCreationTimeFromExifMetaData(file, force);
         }
     }
 
-    private static Date getFileCreationTimeFromExifMetaData(File photo) throws ImageProcessingException, IOException {
-        final Metadata metadata = ImageMetadataReader.readMetadata(photo);
+    private static Date getFileCreationTimeFromExifMetaData(final File file, final boolean force) throws ImageProcessingException, IOException {
+        final Metadata metadata = ImageMetadataReader.readMetadata(file);
         Date value = null;
         if (null != metadata) {
 
@@ -94,31 +94,31 @@ public final class FileHelper {
                 directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
                 value = null != directory ? directory.getDate(ExifSubIFDDirectory.TAG_DATETIME) : null;
             }
-            if (null == value) {
+            if (null == value && force) {
                 directory = metadata.getFirstDirectoryOfType(FileMetadataDirectory.class);
                 value = null != directory ? directory.getDate(FileMetadataDirectory.TAG_FILE_MODIFIED_DATE) : null;
             }
 
         }
         if (null == value) {
-            logger.warning(photo.getAbsolutePath() + " => impossible de récuperer la date de création du fichier");
+            logger.warning(file.getAbsolutePath() + " => impossible de récuperer la date de création du fichier");
         }
         return value;
     }
 
-    public static Date getCreationDateFromMetaData(File file) throws ImageProcessingException, IOException {
+    public static Date getCreationDateFromMetaData(final File file, final boolean force) throws ImageProcessingException, IOException {
         final String fileName = file.getName();
         final String extension = fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
         switch (extension) {
             case "png":
             case "jpg":
             case "jpeg":
-                return getFileCreationTimeFromExifMetaData(file);
+                return getFileCreationTimeFromExifMetaData(file, force);
             case "avi":
             case "mov":
             case "mp4":
             case "mp2":
-                return getFileCreationTimeFromMovieMetaData(file);
+                return getFileCreationTimeFromMovieMetaData(file, force);
             default:
                 return null;
         }
