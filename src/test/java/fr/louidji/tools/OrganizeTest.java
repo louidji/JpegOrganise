@@ -17,7 +17,7 @@ import static org.junit.Assert.assertTrue;
  * Time: 18:05
  */
 public class OrganizeTest {
-    public static final FileFilter FILTER = new FileFilter() {
+    private static final FileFilter FILTER = new FileFilter() {
         @Override
         public boolean accept(File file) {
             final String fileName = file.getName().toLowerCase();
@@ -89,7 +89,7 @@ public class OrganizeTest {
         String destMd5 = FileHelper.md5(DEST + "2012" + File.separator + "2012_01_08" + File.separator + TEMP_FILE1);
 
         assertEquals(destMd5, "6deb5bec09d0a2e82a71a71f574d893a");
-        destMd5 = FileHelper.md5(DEST + "2012" + File.separator + "2012_01_08" + File.separator + "2012_01_08-16_34_05.jpg");
+        destMd5 = FileHelper.md5(DEST + "2012" + File.separator + "2012_01_08" + File.separator + "2012_01_08-17_34_05.jpg");
         assertEquals(destMd5, "6deb5bec09d0a2e82a71a71f574d893a");
 
         System.out.println(destMd5);

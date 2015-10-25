@@ -2,7 +2,6 @@ package fr.louidji.tools;
 
 import com.coremedia.iso.IsoFile;
 import com.coremedia.iso.boxes.MovieBox;
-import com.coremedia.iso.boxes.TrackBox;
 import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
@@ -11,8 +10,10 @@ import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.googlecode.mp4parser.FileDataSourceImpl;
 
-import java.io.*;
-import java.nio.channels.FileChannel;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -22,7 +23,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Formatter;
-import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,24 +68,22 @@ public final class FileHelper {
         }
     }
 
-    public static Date getMp4CreationTimeFromMetaData(File movie) throws IOException {
+    private static Date getMp4CreationTimeFromMetaData(File movie) throws IOException {
 
         final IsoFile isoFile = new IsoFile(new FileDataSourceImpl(movie));
         final MovieBox movieBox = isoFile.getMovieBox();
         if (null != movieBox) {
-            final List<TrackBox> boxes = movieBox.getBoxes(TrackBox.class);
-
-            return boxes.get(0).getMediaBox().getMediaHeaderBox().getCreationTime();
+            return movieBox.getMovieHeaderBox().getCreationTime();
         } else {
             logger.warning(movie.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? mp4 ?)");
             return null;
         }
     }
 
-    public static Date getImageCreationTimeFromMetaData(File photo) throws ImageProcessingException, IOException {
+    private static Date getImageCreationTimeFromMetaData(File photo) throws ImageProcessingException, IOException {
         final Metadata metadata = ImageMetadataReader.readMetadata(photo);
         if (null != metadata) {
-            final ExifSubIFDDirectory directory = metadata.getDirectory(ExifSubIFDDirectory.class);
+            final ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
             final Date date;
             return null != directory ? directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) : null;
         } else {
@@ -143,7 +141,7 @@ public final class FileHelper {
      * @throws NoSuchAlgorithmException
      * @throws IOException
      */
-    public static byte[] bytesMd5(final String filePath) throws NoSuchAlgorithmException, IOException {
+    private static byte[] bytesMd5(final String filePath) throws NoSuchAlgorithmException, IOException {
         MessageDigest md = MessageDigest.getInstance("MD5");
         InputStream is = null;
         DigestInputStream dis = null;
@@ -173,46 +171,12 @@ public final class FileHelper {
      * @throws IOException
      * @throws NoSuchAlgorithmException
      */
-    public static boolean compareMd5File(final String filePathOne, final String filePathTwo) throws IOException, NoSuchAlgorithmException {
+    private static boolean compareMd5File(final String filePathOne, final String filePathTwo) throws IOException, NoSuchAlgorithmException {
         byte[] byte1 = bytesMd5(filePathOne);
         byte[] byte2 = bytesMd5(filePathTwo);
         return Arrays.equals(byte1, byte2);
     }
 
-    /**
-     * Copie (ecrase si existan) un fichier.
-     *
-     * @param sourceFile fichier source.
-     * @param destFile   fichier destination.
-     * @return vrais si le transfert est complet.
-     * @throws IOException
-     */
-    public static boolean oldJdkCopyFile(final File sourceFile, final File destFile) throws IOException {
-        boolean transfer = false;
-        if (!destFile.exists()) {
-            if (!destFile.createNewFile()) {
-                logger.warning("Probleme de création du fichier " + destFile.getAbsolutePath());
-            }
-        }
-
-        FileChannel source = null;
-        FileChannel destination = null;
-        try {
-            source = new FileInputStream(sourceFile).getChannel();
-            destination = new FileOutputStream(destFile).getChannel();
-            final long size = source.size();
-            transfer = size == destination.transferFrom(source, 0, size);
-        } finally {
-            if (source != null) {
-                source.close();
-            }
-            if (destination != null) {
-                destination.close();
-            }
-        }
-        return transfer;
-    }
-
 
     /**
      * Copie (ecrase si existan) un fichier.
@@ -222,26 +186,8 @@ public final class FileHelper {
      * @return vrais si le transfert est complet.
      * @throws IOException
      */
-    @SuppressWarnings("UnusedDeclaration")
     public static boolean copyFile(final File sourceFilePath, final File destFilePath) throws IOException {
         return null != Files.copy(Paths.get(sourceFilePath.toURI()), Paths.get(destFilePath.toURI()),
-                StandardCopyOption.REPLACE_EXISTING,
-                StandardCopyOption.COPY_ATTRIBUTES
-        );
-
-    }
-
-    /**
-     * Copie (ecrase si existan) un fichier.
-     *
-     * @param sourceFilePath fichier source.
-     * @param destFilePath   fichier destination.
-     * @return vrais si le transfert est complet.
-     * @throws IOException
-     */
-    @SuppressWarnings("UnusedDeclaration")
-    public static boolean copyFile(final String sourceFilePath, final String destFilePath) throws IOException {
-        return null != Files.copy(Paths.get(sourceFilePath), Paths.get(destFilePath),
                 StandardCopyOption.REPLACE_EXISTING,
                 StandardCopyOption.COPY_ATTRIBUTES
         );
@@ -256,7 +202,7 @@ public final class FileHelper {
      * @param override   si vrais on ecrase le fichier de dest si il existe, sinon on creer un nouveau fichier avec increment.
      * @return vrais si le deplacement a reussi.
      */
-    public static boolean moveFile(final File sourceFile, final File destFile, boolean override) {
+    public static boolean moveFile(final File sourceFile, final File destFile, final boolean override) {
         boolean move = false;
         if (sourceFile.equals(destFile)) {
             if (logger.isLoggable(Level.FINE)) {

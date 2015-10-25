@@ -87,10 +87,10 @@ public class Organize {
     /**
      * Deplace la photo en fonction de sa date de prise de vue.
      *
-     * @param file                Image ou video source.
+     * @param file                 Image ou video source.
      * @param destBaseDir          Répertoire de destination.
      * @param destDirPatternFormat pattern du sous repertoire
-     * @param fileNamePattern     pattern temporelle du nom de des images sans l'extension (si null on prend le nom par defaut)
+     * @param fileNamePattern      pattern temporelle du nom de des images sans l'extension (si null on prend le nom par defaut)
      * @return vrais si la photo est déplacés
      */
     public static boolean organize(File file, File destBaseDir, String destDirPatternFormat, String fileNamePattern) {
@@ -100,34 +100,34 @@ public class Organize {
 
             final Date date = FileHelper.getCreationDateFromMetaData(file);
             if (null != date) {
-                    final SimpleDateFormat df = new SimpleDateFormat(destDirPatternFormat);
-                    final String formatted = df.format(date);
+                final SimpleDateFormat df = new SimpleDateFormat(destDirPatternFormat);
+                final String formatted = df.format(date);
 
-                    final String destDir = destBaseDir.getPath().concat(File.separator).concat(formatted);
+                final String destDir = destBaseDir.getPath().concat(File.separator).concat(formatted);
 
-                    final File dir = new File(destDir);
-                    if (!dir.exists() || !dir.isDirectory()) {
-                        if (!dir.mkdirs()) {
-                            logger.warning("Problème lors de la création de l'arborescence " + dir.getAbsolutePath());
-                        }
+                final File dir = new File(destDir);
+                if (!dir.exists() || !dir.isDirectory()) {
+                    if (!dir.mkdirs()) {
+                        logger.warning("Problème lors de la création de l'arborescence " + dir.getAbsolutePath());
                     }
-                    final String name;
+                }
+                final String name;
                 final String photoName = file.getName();
                 if (null == fileNamePattern || fileNamePattern.isEmpty())
-                        name = photoName;
-                    else {
+                    name = photoName;
+                else {
                     df.applyPattern(fileNamePattern);
-                        name = df.format(date) + photoName.substring(photoName.lastIndexOf('.'));
-                    }
-                    final String destFile = destDir.concat(File.separator).concat(name);
+                    name = df.format(date) + photoName.substring(photoName.lastIndexOf('.'));
+                }
+                final String destFile = destDir.concat(File.separator).concat(name);
 
                 done = FileHelper.moveFile(file, new File(destFile), false);
-                    if (done) {
-                        logger.fine(file.getAbsolutePath() + " => " + destFile);
-                    }
-                } else {
-                logger.info(file.getAbsolutePath() + " n'a pas de metadata, image non copiée.");
+                if (done) {
+                    logger.fine(file.getAbsolutePath() + " => " + destFile);
                 }
+            } else {
+                logger.info(file.getAbsolutePath() + " n'a pas de metadata, image non copiée.");
+            }
 
 
         } catch (ImageProcessingException | IOException e) {
