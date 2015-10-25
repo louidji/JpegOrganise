@@ -6,7 +6,6 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
-import com.drew.metadata.Tag;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
 import com.googlecode.mp4parser.FileDataSourceImpl;
 
@@ -61,9 +60,7 @@ public final class FileHelper {
         Metadata metadata = ImageMetadataReader.readMetadata(filePath);
         if (null != metadata) {
             for (Directory directory : metadata.getDirectories()) {
-                for (Tag tag : directory.getTags()) {
-                    System.out.println(tag);
-                }
+                directory.getTags().forEach(System.out::println);
             }
         }
     }
@@ -274,9 +271,7 @@ public final class FileHelper {
                 }
 
 
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
-            } catch (NoSuchAlgorithmException e) {
+            } catch (IOException | NoSuchAlgorithmException e) {
                 logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
             }
 

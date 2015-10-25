@@ -17,12 +17,9 @@ import static org.junit.Assert.assertTrue;
  * Time: 18:05
  */
 public class OrganizeTest {
-    private static final FileFilter FILTER = new FileFilter() {
-        @Override
-        public boolean accept(File file) {
-            final String fileName = file.getName().toLowerCase();
-            return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg");
-        }
+    private static final FileFilter FILTER = file -> {
+        final String fileName = file.getName().toLowerCase();
+        return fileName.endsWith(".jpg") || fileName.endsWith(".jpeg");
     };
     private static final String TEMP_FILE1 = "2012-01-08 16.34.06.jpg";
     private static final String TMP_PATH_FILE1 = "./tmp/" + TEMP_FILE1;

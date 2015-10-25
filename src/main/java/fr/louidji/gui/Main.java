@@ -6,7 +6,9 @@ import fr.louidji.tools.Result;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.text.DateFormat;
 import java.util.Date;
@@ -44,17 +46,9 @@ class Main extends JDialog {
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
-        buttonOK.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onOK();
-            }
-        });
+        buttonOK.addActionListener(e -> onOK());
 
-        buttonCancel.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        });
+        buttonCancel.addActionListener(e -> onCancel());
 
 // call onCancel() when cross is clicked
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -65,23 +59,9 @@ class Main extends JDialog {
         });
 
 // call onCancel() on ESCAPE
-        contentPane.registerKeyboardAction(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                onCancel();
-            }
-        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        sourceButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                handleSrc();
-            }
-        });
-        destinationButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                handleDest();
-            }
-        });
+        contentPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        sourceButton.addActionListener(actionEvent -> handleSrc());
+        destinationButton.addActionListener(actionEvent -> handleDest());
 
 
         logHandler = new MyHandler(textArea);
@@ -177,28 +157,22 @@ class Main extends JDialog {
 
             buttonOK.setEnabled(false);
             textArea.append("=============================\n");
-            Thread worker = new Thread(new Runnable() {
-                public void run() {
-                    final File sourceDir = new File(textFieldSrc.getText());
-                    final File destDir = new File(textFieldDst.getText());
+            Thread worker = new Thread(() -> {
+                final File sourceDir = new File(textFieldSrc.getText());
+                final File destDir = new File(textFieldDst.getText());
 
-                    final long start = System.currentTimeMillis();
-                    final Result result = Organize.organizeAll(sourceDir, destDir, Organize.BASE_DIR_PATTERN_FORMAT, renamePhoto.isSelected() ? Organize.PHOTO_NAME_LONG_FORMAT : null);
-                    final long end = System.currentTimeMillis();
+                final long start = System.currentTimeMillis();
+                final Result result = Organize.organizeAll(sourceDir, destDir, Organize.BASE_DIR_PATTERN_FORMAT, renamePhoto.isSelected() ? Organize.PHOTO_NAME_LONG_FORMAT : null);
+                final long end = System.currentTimeMillis();
 
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            textArea.append("=============================\n");
-                            textArea.append("    Resultat du traitement : " + result.getNbImagesProcessed() + "∕" + result.getNbImagesToProcess() + " (" + (end - start) + " ms)");
-                            textArea.append("\n=============================\n");
-                            buttonOK.setEnabled(true);
-                        }
-                    });
+                SwingUtilities.invokeLater(() -> {
+                    textArea.append("=============================\n");
+                    textArea.append("    Resultat du traitement : " + result.getNbImagesProcessed() + "∕" + result.getNbImagesToProcess() + " (" + (end - start) + " ms)");
+                    textArea.append("\n=============================\n");
+                    buttonOK.setEnabled(true);
+                });
 
 
-                }
             }
             );
             worker.start();

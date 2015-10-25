@@ -31,13 +31,10 @@ public class Organize {
     /**
      * File Filter pour filtre => accepte JPG & MOV & MP4 & MP2 & Dir.
      */
-    private static final FileFilter mediaOrDirFileFilter = new FileFilter() {
-        @Override
-        public boolean accept(File file) {
-            assert null != file : "Le fichier ne peut etre null";
-            final String name = file.getName().toLowerCase();
-            return file.isDirectory() || (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".mov") || name.endsWith(".mp4") || name.endsWith(".mp2"));
-        }
+    private static final FileFilter mediaOrDirFileFilter = file -> {
+        assert null != file : "Le fichier ne peut etre null";
+        final String name = file.getName().toLowerCase();
+        return file.isDirectory() || (name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".mov") || name.endsWith(".mp4") || name.endsWith(".mp2"));
     };
 
     public static void addHandler(Handler handler) throws SecurityException {
