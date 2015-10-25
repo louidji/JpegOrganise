@@ -5,6 +5,7 @@ import fr.louidji.tools.Organize;
 import fr.louidji.tools.Result;
 
 import javax.swing.*;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -57,6 +58,10 @@ class Main extends JDialog {
                 onCancel();
             }
         });
+
+        // autoscroll du textarea
+        DefaultCaret caret = (DefaultCaret) textArea.getCaret();
+        caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 // call onCancel() on ESCAPE
         contentPane.registerKeyboardAction(e -> onCancel(), KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -168,12 +173,7 @@ class Main extends JDialog {
                 textArea.append("    Resultat du traitement : " + result.getNbImagesProcessed() + "∕" + result.getNbImagesToProcess() + " (" + (end - start) + " ms)");
                 textArea.append("\n=============================\n");
 
-                SwingUtilities.invokeLater(() -> {
-
-                    buttonOK.setEnabled(true);
-                });
-
-
+                SwingUtilities.invokeLater(() -> buttonOK.setEnabled(true));
             }
             );
             worker.start();
