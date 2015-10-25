@@ -6,7 +6,9 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifIFD0Directory;
 import com.drew.metadata.exif.ExifSubIFDDirectory;
+import com.drew.metadata.file.FileMetadataDirectory;
 import com.googlecode.mp4parser.FileDataSourceImpl;
 
 import java.io.File;
@@ -60,6 +62,7 @@ public final class FileHelper {
         Metadata metadata = ImageMetadataReader.readMetadata(filePath);
         if (null != metadata) {
             for (Directory directory : metadata.getDirectories()) {
+                System.out.println("\t" + directory.getName() + " - " + directory.getClass());
                 directory.getTags().forEach(System.out::println);
             }
         }
@@ -79,13 +82,28 @@ public final class FileHelper {
 
     private static Date getImageCreationTimeFromMetaData(File photo) throws ImageProcessingException, IOException {
         final Metadata metadata = ImageMetadataReader.readMetadata(photo);
+        Date value = null;
         if (null != metadata) {
-            final ExifSubIFDDirectory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
-            return null != directory ? directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) : null;
-        } else {
-            logger.warning(photo.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? image ?)");
-            return null;
+
+            // ajout pour autres types d'encodage de la date selon les appareils...
+            Directory directory = metadata.getFirstDirectoryOfType(ExifSubIFDDirectory.class);
+            value = null != directory ? directory.getDate(ExifSubIFDDirectory.TAG_DATETIME_ORIGINAL) : null;
+
+            if (null == value) {
+                // cas spe 1
+                directory = metadata.getFirstDirectoryOfType(ExifIFD0Directory.class);
+                value = null != directory ? directory.getDate(ExifSubIFDDirectory.TAG_DATETIME) : null;
+            }
+            if (null == value) {
+                directory = metadata.getFirstDirectoryOfType(FileMetadataDirectory.class);
+                value = null != directory ? directory.getDate(FileMetadataDirectory.TAG_FILE_MODIFIED_DATE) : null;
+            }
+
         }
+        if (null == value) {
+            logger.warning(photo.getAbsolutePath() + " => impossible de récuperer la date de création du fichier (? image ?)");
+        }
+        return value;
     }
 
     public static Date getCreationDateFromMetaData(File file) throws ImageProcessingException, IOException {

@@ -164,11 +164,12 @@ class Main extends JDialog {
                 final long start = System.currentTimeMillis();
                 final Result result = Organize.organizeAll(sourceDir, destDir, Organize.BASE_DIR_PATTERN_FORMAT, renamePhoto.isSelected() ? Organize.PHOTO_NAME_LONG_FORMAT : null);
                 final long end = System.currentTimeMillis();
+                textArea.append("=============================\n");
+                textArea.append("    Resultat du traitement : " + result.getNbImagesProcessed() + "∕" + result.getNbImagesToProcess() + " (" + (end - start) + " ms)");
+                textArea.append("\n=============================\n");
 
                 SwingUtilities.invokeLater(() -> {
-                    textArea.append("=============================\n");
-                    textArea.append("    Resultat du traitement : " + result.getNbImagesProcessed() + "∕" + result.getNbImagesToProcess() + " (" + (end - start) + " ms)");
-                    textArea.append("\n=============================\n");
+
                     buttonOK.setEnabled(true);
                 });
 

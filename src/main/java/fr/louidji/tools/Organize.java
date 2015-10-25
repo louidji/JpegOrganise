@@ -68,7 +68,7 @@ public class Organize {
      */
     public static Result organizeAll(File sourceDir, File destDir, String destDirPatternFormat, String photoNamePattern) {
         final Result result = new Result(0, 0);
-        File files[] = sourceDir.listFiles(mediaOrDirFileFilter);
+        final File files[] = sourceDir.listFiles(mediaOrDirFileFilter);
         for (File file : files) {
             if (file.isDirectory()) {
                 result.add(organizeAll(file, destDir, destDirPatternFormat, photoNamePattern));
