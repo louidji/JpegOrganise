@@ -71,16 +71,19 @@ public class Organize {
      */
     public static Result organizeAll(final File sourceDir, final File destDir, final String destDirPatternFormat, final String photoNamePattern, final boolean force) {
         final Result result = new Result(0, 0);
+        return recurseOrganize(sourceDir, destDir, destDirPatternFormat, photoNamePattern, force, result);
+    }
+
+    private static Result recurseOrganize(File sourceDir, File destDir, String destDirPatternFormat, String photoNamePattern, boolean force, final Result result) {
         final File files[] = sourceDir.listFiles(mediaOrDirFileFilter);
         for (File file : files) {
             if (file.isDirectory()) {
-                result.add(organizeAll(file, destDir, destDirPatternFormat, photoNamePattern, force));
+                result.add(recurseOrganize(file, destDir, destDirPatternFormat, photoNamePattern, force, result));
             } else {
                 boolean done = organize(file, destDir, destDirPatternFormat, photoNamePattern, force);
                 result.add(1, done ? 1 : 0);
             }
         }
-
         return result;
     }
 

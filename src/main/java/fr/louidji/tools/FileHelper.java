@@ -238,7 +238,7 @@ public final class FileHelper {
                     }
 
                 } catch (IOException e) {
-                    logger.log(Level.SEVERE, e.getLocalizedMessage(), e);
+                    logger.log(Level.SEVERE, e.getMessage(), e);
                 }
             }
         } else {

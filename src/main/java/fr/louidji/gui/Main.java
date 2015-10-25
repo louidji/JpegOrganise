@@ -161,6 +161,7 @@ class Main extends JDialog {
                 logger.log(Level.WARNING, e.getLocalizedMessage(), e);
             }
 
+
             buttonOK.setEnabled(false);
             textArea.append("=============================\n");
             Thread worker = new Thread(() -> {
